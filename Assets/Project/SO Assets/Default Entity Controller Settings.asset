@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2982dd6bb1d4dba40bf0575ac8256fa0, type: 3}
-  m_Name: Default Filters
+  m_Script: {fileID: 11500000, guid: 75a59f260d79b7f4da210dd8f8cadf2e, type: 3}
+  m_Name: Default Entity Controller Settings
   m_EditorClassIdentifier: 
-  _groundLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  _maxFloorAngle: 40
-  _wallError: 1
+  _jumpHeight: 4
+  _maxSpeed: 7
+  _accelrationDistance: 1
+  _decelerationDistance: 1
+  _snapDistance: 1
