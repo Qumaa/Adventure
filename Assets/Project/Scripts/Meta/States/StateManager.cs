@@ -5,128 +5,114 @@ namespace Project.States
 {
     public class StateManager : IStateManager
     {
-        IState _currentState;
-        IState _defaultState;
+        #region Values
 
-        private List<IState> _stateRegistry;
-        private Dictionary<IState, List<Transition>> _stateTransitionsRegistry;
-        private List<Transition> _anyTransitions;
-        private List<Transition> _availableTransitions;
+        protected IState _defaultState { get; private set; }
 
-        public IState CurrentState => _currentState;
-        protected IState DefaultState => _defaultState;
+        private IState _currentState;
+        private List<IState> _statesRegistry;
+        private Dictionary<IState, List<Transition>> _transitionsRegistry;
+        private List<Transition> _anyTransitionsRegistry;
+
+        private Transition[] _currentStateTransitions;
 
         public StateManager()
         {
-            _stateRegistry = new List<IState>();
-            _stateTransitionsRegistry = new Dictionary<IState, List<Transition>>();
-            _anyTransitions = new List<Transition>();
-            _availableTransitions = new List<Transition>();
+            _defaultState = null;
         }
 
-        public virtual void TickStates()
-        {
-            if (_currentState == null)
-            {
-                if (_defaultState == null) return;
-                SetState(_defaultState);
-            }
+        #endregion
 
+        #region Interface
+
+        public void TickStates()
+        {
+            CheckNullState();
+            
             CheckTransitions();
-
-            _currentState.Update();
-        }
-        protected virtual void CheckTransitions()
-        {
-            foreach (Transition t in _anyTransitions)
-            {
-                if (t.Condition())
-                {
-                    SetState(t.TargetState);
-                    return;
-                }
-            }
-
-            foreach (Transition t in _availableTransitions)
-            {
-                if (t.Condition())
-                {
-                    SetState(t.TargetState);
-                    return;
-                }
-            }
+            
+            _currentState?.Update();
         }
 
-        protected void SetState(IState state)
-        {
-            if (state == null || _currentState == state) return;
+        public void AssignDefaultState(IState state) => 
+            _defaultState = state;
 
+        public void RegisterState(IState state) => 
+            SafeAddToCollection(state, _statesRegistry);
+
+        public void AddTransition(IState from, IState to, Func<bool> condition) =>
+            SafeAddToCollection(new Transition(to, condition), GetTransitions(from));
+        public void AddAnyTransition(IState to, Func<bool> condition) =>
+            SafeAddToCollection(new Transition(to, condition), _anyTransitionsRegistry);
+
+        #endregion
+
+        private void SafeAddToCollection<TItem>(TItem item, ICollection<TItem> collection)
+        {
+            if (collection.Contains(item))
+                throw new Exception($"Duplicate {item.ToString()} is tried to be added to {collection.ToString()}");
+            
+            collection.Add(item);
+        }
+
+        private List<Transition> GetTransitions(IState from)
+        {
+            if (from == null) return default;
+
+            if (!_transitionsRegistry.ContainsKey(from))
+                //throw new Exception($"No transitions registered for {from.ToString()}. Dead end?");
+                return default;
+
+            return _transitionsRegistry[from];
+        }
+
+        protected void SetState(IState next)
+        {
+            if (_currentState == next) return;
+            
             _currentState?.Exit();
 
-            _currentState = state;
-            _availableTransitions = GetTransitions(state);
-
-            _currentState.Enter();
+            _currentState = next;
+            _currentStateTransitions = GetTransitions(_currentState).ToArray();
+            
+            _currentState?.Enter();
         }
 
-        internal void AssignDefaultState(IState state)
+        private void CheckNullState() =>
+            _currentState ??= _defaultState ?? throw new Exception("Default state is not assigned");
+
+        private void CheckTransitions()
         {
-            if (state == null) return;
-            _defaultState = state;
-        }
-
-        private List<Transition> GetTransitions(IState state)
-        {
-            if (!_stateTransitionsRegistry.ContainsKey(state)) _stateTransitionsRegistry.Add(state, new List<Transition>());
-
-            return _stateTransitionsRegistry[state];
-        }
-
-        public void RegisterState(IState state)
-        {
-            // prevent adding duplicates
-            if (_stateRegistry.Contains(state))
-                throw new Exception($"{this} tried to add an existing state: {state}");
-
-            _stateRegistry.Add(state);
-        }
-        public void AddTransition(IState from, IState to, Func<bool> condition)
-        {
-            List<Transition> transitions = GetTransitions(from);
-            Transition newTransition = new Transition(to, condition);
-
-            // prevent adding duplicates
-            if (transitions.Contains(newTransition))
-                throw new Exception($"{this} tried to add an existing transition: {newTransition}");
-
-            transitions.Add(newTransition);
-        }
-        public void AddAnyTransition(IState to, Func<bool> condition)
-        {
-            Transition newTransition = new Transition(to, condition);
-
-            // prevent adding duplicates
-            if (_anyTransitions.Contains(newTransition))
-                throw new Exception($"{this} tried to add an existing any transition: {newTransition}");
-
-            _anyTransitions.Add(newTransition);
-        }
-
-        protected void UnsafeClearCurrentState()
-        {
-            _currentState = null;
-        }
-
-        protected class Transition
-        {
-            public IState TargetState { get; private set; }
-            public Func<bool> Condition { get; private set; }
-
-            public Transition(IState to, Func<bool> condition)
+            if (Check(_anyTransitionsRegistry)) return;
+            Check(_currentStateTransitions);
+            
+            bool Check(ICollection<Transition> list)
             {
-                TargetState = to;
+                if (list == null) 
+                    return false;
+                
+                foreach (Transition tran in list)
+                {
+                    if (!tran.Condition()) continue;
+                    
+                    SetState(tran.TargetState);
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private class Transition
+        {
+            public readonly IState TargetState;
+            public readonly Func<bool> Condition;
+
+            public Transition(IState targetState, Func<bool> condition)
+            {
+                TargetState = targetState;
                 Condition = condition;
             }
-        }        
+        }
     }
 }

@@ -4,5 +4,6 @@
     {
         FiltersHolderPlayer Filters { get; }
         bool Slope { get; }
+        bool GroundOrSlope { get; }
     }
 }

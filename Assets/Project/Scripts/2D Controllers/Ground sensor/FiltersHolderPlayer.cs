@@ -9,13 +9,16 @@ namespace Project.Controller2D
     public class FiltersHolderPlayer : FiltersHolderBase
     {
         // editor
+        private const float _MAX_WALL_ERROR = 5;
+        private const float _MAX_FLOOR_ANGLE = 90 - _MAX_WALL_ERROR / 2f;
+        
         [SerializeField] private LayerMask _groundLayers;
-        [SerializeField] [Range(0, 85)] private float _maxFloorAngle;
-        [SerializeField] [Range(0, 5)] private float _wallError;
+        [SerializeField] [Range(0, _MAX_FLOOR_ANGLE)] private float _maxFloorAngle;
+        [SerializeField] [Range(0, _MAX_WALL_ERROR)] private float _wallError;
 
-        private ContactFilter2D _slope = new ContactFilter2D();
+        private ContactFilter2D _groundOrSlope = new ContactFilter2D();
 
-        public ContactFilter2D Slope => _slope;
+        public ContactFilter2D GroundOrSlope => _groundOrSlope;
         public override LayerMask GroundLayer => _groundLayers;        
 
         // angles
@@ -25,10 +28,10 @@ namespace Project.Controller2D
         {
             // TODO: gui thing like in navmesh agent
 
-            SetFilters();
+            UpdateFilters();
         }
 
-        private void SetFilters()
+        private void UpdateFilters()
         {
             // TODO
             SetAllFiltersMask(_groundLayers);
@@ -43,13 +46,13 @@ namespace Project.Controller2D
             SetFilterAngles(ref _Right, right, _wallError);
             SetFilterAngles(ref _Left, left, _wallError);
 
-            SetFilterAngles(ref _slope, down, 90 - _wallError / 2);
+            SetFilterAngles(ref _groundOrSlope, down, _MAX_FLOOR_ANGLE);
         }
 
         protected override void SetAllFiltersMask(LayerMask mask)
         {
             base.SetAllFiltersMask(mask);
-            SetFilterMask(ref _slope, mask);
+            SetFilterMask(ref _groundOrSlope, mask);
         }
     }
 }

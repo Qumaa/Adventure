@@ -6,7 +6,7 @@ namespace Project.Controller2D
     public class GroundSensorPlayer : MonoBehaviour, IGroundSensorPlayer
     {
         [SerializeField] private FiltersHolderPlayer _FilterHolder;
-        protected CapsuleCollider2D itsCapsule;
+        protected CapsuleCollider2D _itsCapsule;
 
         private GroundData _cachedGroundData = new GroundData();
         private bool _hasBeenRefreshed;
@@ -16,6 +16,7 @@ namespace Project.Controller2D
         public FiltersHolderPlayer Filters => _FilterHolder;
         public bool Ground => _cachedGroundData.Ground;
         public bool Slope => _cachedGroundData.Slope;
+        public bool GroundOrSlope => Ground || Slope;
         public bool Ceiling => _cachedGroundData.Ceiling;
         public bool Right => _cachedGroundData.Right;
         public bool Left => _cachedGroundData.Left;
@@ -23,7 +24,7 @@ namespace Project.Controller2D
 
         protected virtual void Awake()
         {
-            this.TryGetReference(ref itsCapsule);
+            this.TryGetReference(ref _itsCapsule);
         }
         protected virtual void FixedUpdate()
         {
@@ -61,9 +62,9 @@ namespace Project.Controller2D
             Left = Cast(Filters.Left),
             Right = Cast(Filters.Right),
 
-            Slope = Cast(Filters.Slope)
+            Slope = Cast(Filters.GroundOrSlope)
         };
-        protected bool Cast(ContactFilter2D filter) => itsCapsule.IsTouching(filter);
+        protected bool Cast(ContactFilter2D filter) => _itsCapsule.IsTouching(filter);
 
         #region Internal data struct
 

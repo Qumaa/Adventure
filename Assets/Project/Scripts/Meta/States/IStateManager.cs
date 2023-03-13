@@ -1,9 +1,13 @@
-﻿namespace Project.States
+﻿using System;
+
+namespace Project.States
 {
     public interface IStateManager
     {
-        IState CurrentState { get; }
-
-        public void TickStates();
+        void TickStates();
+        void AssignDefaultState(IState state);
+        void RegisterState(IState state);
+        void AddTransition(IState from, IState to, Func<bool> condition);
+        void AddAnyTransition(IState to, Func<bool> condition);
     }
 }

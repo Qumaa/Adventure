@@ -4,7 +4,7 @@ using UnityEngine;
 using Project.Controller2D;
 using Project.States;
 
-public class TemporalCharacterController : PlayerController2D<IGroundSensorPlayer>
+public class TemporalCharacterController : PlayerController2D
 {
     #region Values
     // public, protected: Name
@@ -50,35 +50,20 @@ public class TemporalCharacterController : PlayerController2D<IGroundSensorPlaye
 
         if (Input.GetKeyUp(KeyCode.Space))
         {
-            InputData.ClearJumpInput();
+            _inputData.ClearJumpInput();
         }
 
         if (Input.GetAxisRaw("Horizontal") != 0)
         {
             this.Move(Input.GetAxisRaw("Horizontal"));
         }
-        else this.InputData.ClearMoveInput();
-    }
-
-    protected override bool FallingCondition()
-    {
-        return !(EntityData.Sensor.Ground || EntityData.Sensor.Slope);
-    }
-
-    protected override void UpdateNormal()
-    {
-        if (!EntityData.Sensor.Ground)
-        {
-            EntityData.HandlerFacade.Handler.Normal = Vector2.up;
-            return;
-        }
-
-        EntityData.HandlerFacade.CalculateNormalFromContacts(EntityData.Sensor.Filters.Ground);
+        else this._inputData.ClearMoveInput();
     }
 
     protected override void RegisterAllStates(IStateManager manager)
     {
-        
+        var state = new GodlikeGroundState(_inputData, _entityData, _playerData);
+        manager.AssignDefaultState(state);
     }
 
     #endregion

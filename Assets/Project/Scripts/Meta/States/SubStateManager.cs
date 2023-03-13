@@ -1,21 +1,20 @@
 ﻿namespace Project.States
 {
-    public sealed class SubStateManager : StateManager, IState
+    public class SubStateManager : StateManager, IState
     {
-        public void Enter()
+        public virtual void Enter()
         {
-            base.SetState(base.DefaultState);
+            SetState(_defaultState);
         }
 
-        public void Exit()
+        public virtual void Update()
         {
-            base.CurrentState?.Exit();
-            base.UnsafeClearCurrentState();
+            TickStates();
         }
 
-        public void Update()
+        public virtual void Exit()
         {
-            base.TickStates();
+            SetState(null);
         }
     }
 }

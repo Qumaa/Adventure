@@ -15,5 +15,5 @@ MonoBehaviour:
   _groundLayers:
     serializedVersion: 2
     m_Bits: 64
-  _maxFloorAngle: 40
+  _maxFloorAngle: 44
   _wallError: 1
