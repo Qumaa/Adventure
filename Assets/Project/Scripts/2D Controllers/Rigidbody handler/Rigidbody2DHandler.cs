@@ -101,9 +101,11 @@ namespace Project.Controller2D
         }
 
         // vertical velocity from gravity
-        public void AccumulateVerticalVelocity(float velocity) => VerticalVelocity += velocity;
-        public void AccumulateVerticalVelocity() =>
-            AccumulateVerticalVelocity(OneStepPhysicsValue);
+        public void AccumulateGravity() =>
+            AccumulateGravity(Physics2D.gravity.y);
+
+        public void AccumulateGravity(float gravity) =>
+            AccumulateVerticalVelocityInternal(OneStepPhysicsValue(gravity));
 
         // velocity interactions
         public void UpdateWorldVelocity() => WorldVelocity = CalculateWorldVelocity();
@@ -120,7 +122,10 @@ namespace Project.Controller2D
         private float EmulateForceAddition(float rawForce, ForceMode2D mode) =>
             mode == ForceMode2D.Impulse ? rawForce : rawForce * Time.fixedDeltaTime;
 
-        private float OneStepPhysicsValue => Physics2D.gravity.y / Body.mass * GravityScale * Time.fixedDeltaTime;
+        private float OneStepPhysicsValue(float gravity) =>
+            gravity / Body.mass * GravityScale * Time.fixedDeltaTime;
+        private void AccumulateVerticalVelocityInternal(float velocity) => 
+            VerticalVelocity += velocity;
 
         #endregion
     }

@@ -46,31 +46,28 @@ namespace Project.Controller2D
             
             Handler.AddHorizontalForce(force);
         }
-        public void LimitHorizotalVelocity(float limit)
-        {
+        public void LimitHorizotalVelocity(float limit) => 
             Handler.HorizontalVelocity = Mathf.Clamp(Handler.HorizontalVelocity, -limit, limit);
-        }
-        
+
         public bool CanBeSnapped(ContactFilter2D filter, float snapDistance) => 
             CanBeSnappedInternal(filter, snapDistance);
-        public bool SnapAndUpdateNormal(ContactFilter2D normalFilter, ContactFilter2D snappingFilter, float snapDistance)
+        public void SnapAndUpdateNormal(ContactFilter2D normalFilter, ContactFilter2D snappingFilter,
+            float snapDistance)
         {
             RaycastHit2D hitInfoSnap = CanBeSnappedInternal(snappingFilter, snapDistance);
             
-            if (!hitInfoSnap) return false;
+            if (!hitInfoSnap) return;
 
             RaycastHit2D hitInfoNormal = normalFilter.Equals(snappingFilter) ? hitInfoSnap : CanBeSnappedInternal(normalFilter, snapDistance);
             Vector2 normal = hitInfoNormal ? hitInfoSnap.normal.normalized : Vector2.up;
-            if (Handler.Normal == normal) return true;
+            if (Handler.Normal == normal) return;
 
             float snap = Mathf.Max(hitInfoSnap.distance - Physics2D.defaultContactOffset, 0);
             SnapInternal(snap, normal);
-            return true;
         }
 
         public void UpdateNormal(ContactFilter2D groundFilter) =>
             UpdateNormal(CalculateNormalFromContacts(groundFilter));
-
         public void UpdateNormal(Vector2 normal) =>
             Handler.Normal = normal.normalized;
         
@@ -78,6 +75,14 @@ namespace Project.Controller2D
         {
             Handler.UpdateWorldVelocity();
         }
+        
+        public void AccumulateGravity() => 
+            Handler.AccumulateGravity();
+        public void AccumulateGravity(float gravity) =>
+            Handler.AccumulateGravity(gravity);
+
+        public void ResetAccumulatedGravity() => 
+            Handler.VerticalVelocity = 0;
 
         // force calculations
         private float CalculateJumpImpulse(float height)
@@ -140,5 +145,7 @@ namespace Project.Controller2D
         }
 
         #endregion
+
+        
     }
 }

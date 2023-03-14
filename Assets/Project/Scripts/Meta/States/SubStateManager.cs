@@ -4,7 +4,8 @@
     {
         public virtual void Enter()
         {
-            SetState(_defaultState);
+            if (!CheckAllTransitions())
+                SetDefaultState();
         }
 
         public virtual void Update()
@@ -14,7 +15,17 @@
 
         public virtual void Exit()
         {
-            SetState(null);
+        }
+
+        private bool CheckAllTransitions()
+        {
+            foreach (var state in GetAllStates())
+            {
+                if (CheckTransitions(GetTransitions(state))) 
+                    return true;
+            }
+
+            return CheckTransitions(GetAnyTransitions());
         }
     }
 }

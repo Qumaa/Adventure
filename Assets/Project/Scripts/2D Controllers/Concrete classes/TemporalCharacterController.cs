@@ -1,45 +1,22 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Project.Controller2D;
+using Project.Controller2D.Player;
 using Project.States;
+using UnityEditor;
+
+// TODO: a midair-grounded transition fix:
+// if landed off and can be snapped, snap and stay in grounded
+// else switch to air states
 
 public class TemporalCharacterController : PlayerController2D
 {
     #region Values
-    // public, protected: Name
-    // private: _name
-    // small scope: name
-    // references / components: itsName
-
-    // Editor values
-
-
-    // Internal values
-
-
-    // References
-
-
-    // Properties
 
     #endregion
 
     #region Mono and inherited methods
-
-    private void Start()
-    {
-        Init();
-    }
-
-    private void Init()
-    {
-        // get references
-
-
-        // set up values
-
-    }
 
     private void Update()
     {
@@ -60,25 +37,49 @@ public class TemporalCharacterController : PlayerController2D
         else this._inputData.ClearMoveInput();
     }
 
+    private void OnGUI()
+    {
+        if (_entityData.StateManager.CurrentState is PlayerSubStateManager states) 
+            Handles.Label(transform.position, states.CurrentState.ToString());
+    }
+
     protected override void RegisterAllStates(IStateManager manager)
     {
-        var state = new GodlikeGroundState(_inputData, _entityData, _playerData);
-        manager.AssignDefaultState(state);
+        var sensor = _entityData.Sensor;
+        
+        // sub managers
+        var groundedStates = new PlayerGroundedSubStateManager(_entityData, _playerData);
+        var airStates = new PlayerMidairSubStateManager(_entityData, _playerData);
+        
+        // main
+        manager.RegisterDefaultState(groundedStates)
+            .RegisterState(airStates);
+
+        manager.AddBidirectionalTransition(groundedStates, airStates,
+            () => !_entityData.Sensor.GroundOrSlope);
+        
+        // ground
+        var idleGroundedState = new IdleGroundedPlayerState(_inputData, _entityData, _playerData);
+        var movingGroundedState = new MovingGroundedPlayerState(_inputData, _entityData, _playerData);
+        var slidingState = new SlidingPlayerState(_inputData, _entityData, _playerData);
+        
+        groundedStates.RegisterDefaultState(idleGroundedState)
+            .RegisterState(movingGroundedState)
+            .RegisterState(slidingState);
+
+        groundedStates.AddAnyTransition(slidingState, () => sensor.GroundOrSlope && !sensor.Ground)
+            .AddTransition(slidingState, idleGroundedState, () => sensor.Ground)
+            .AddBidirectionalTransition(idleGroundedState, movingGroundedState, () => _inputData.Movement != 0);
+        
+        // air
+        var idleAirState = new IdleMidairPlayerState(_inputData, _entityData, _playerData);
+        var movingAirState = new MovingMidairPlayerState(_inputData, _entityData, _playerData);
+
+        airStates.RegisterDefaultState(idleAirState)
+            .RegisterState(movingAirState);
+
+        airStates.AddBidirectionalTransition(idleAirState, movingAirState, () => _inputData.Movement != 0);
     }
 
     #endregion
-
-    #region TemporalCharacterController logic
-
-
-
-    #endregion
-
-    #region Math, shortcuts and utility
-
-
-
-    #endregion
-
-    // interfaces implementations
 }

@@ -1,40 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using Project.Controller2D;
-using Project.States;
 
-public abstract class PlayerController2D : EntityController2D<IGroundSensorPlayer>
+namespace Project.Controller2D.Player
 {
-    #region Values
-
-    [SerializeField] private PlayerController2DSettings _playerSettings;
-
-    protected PlayerController2DData _playerData { get; private set; }
-
-    #endregion
-
-    #region Mono and inherited methods
-
-    protected override void CreateData()
+    public abstract class PlayerController2D : EntityController2D<IGroundSensorPlayer>
     {
-        base.CreateData();
-        _playerData = new PlayerController2DData(_playerSettings);
+        #region Values
+
+        [SerializeField] private PlayerController2DSettings _playerSettings;
+
+        protected PlayerController2DData _playerData { get; private set; }
+
+        #endregion
+
+        #region Mono and inherited methods
+
+        protected override void CreateData()
+        {
+            base.CreateData();
+            _playerData = new PlayerController2DData(_playerSettings);
+        }
+
+        #endregion
+
+        #region Controller logic
+
+        public override void Jump()
+        {
+            _inputData.GiveJumpInput();
+        }
+
+        public override void Move(int moveDirectionSign)
+        {
+            _inputData.GiveMoveInput(moveDirectionSign);
+        }
+
+        #endregion
     }
-
-    #endregion
-
-    #region Controller logic
-
-    public override void Jump()
-    {
-        _inputData.GiveJumpInput();
-    }
-
-    public override void Move(int moveDirectionSign)
-    {
-        _inputData.GiveMoveInput(moveDirectionSign);
-    }
-
-    #endregion
 }

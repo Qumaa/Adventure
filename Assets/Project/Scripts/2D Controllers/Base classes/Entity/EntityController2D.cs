@@ -56,9 +56,9 @@ namespace Project.Controller2D
                 handlerFacade
                 );
 
-            RegisterAllStates(stateManager);
-
             CreateData();
+            
+            RegisterAllStates(stateManager);
         }
 
         protected virtual void CreateData() { }
